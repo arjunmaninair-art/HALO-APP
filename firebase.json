@@ -1,0 +1,47 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "halo-safety",
+          "appId": "1:205856408979:android:92208dddb656bb430d5466",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "halo-safety",
+          "configurations": {
+            "android": "1:205856408979:android:92208dddb656bb430d5466",
+            "ios": "1:205856408979:ios:5190ac0cb390911e0d5466",
+            "macos": "1:205856408979:ios:5190ac0cb390911e0d5466",
+            "web": "1:205856408979:web:3dc346d23e618e940d5466",
+            "windows": "1:205856408979:web:e8a287f220e553800d5466"
+          }
+        }
+      }
+    }
+  },
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ]
+  }
+}

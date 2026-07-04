@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "active_incidents": {
+      "$device_id": {
+        ".read": "true",
+        ".write": "true"
+      }
+    }
+  }
+}

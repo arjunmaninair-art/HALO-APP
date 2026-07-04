@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "205856408979",
+    "project_id": "halo-safety",
+    "storage_bucket": "halo-safety.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205856408979:android:92208dddb656bb430d5466",
+        "android_client_info": {
+          "package_name": "com.example.halo_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-zrSKgqkxbDSNKqZlbZrnY915NEX4e9c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
