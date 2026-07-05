@@ -288,6 +288,40 @@
       line-height: 1.4;
     }
 
+    /* Floating Map Layer Switcher Button */
+    .layer-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      background: rgba(30, 30, 35, 0.7);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 10px 16px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s ease-out;
+    }
+    
+    .layer-toggle:hover {
+      background: rgba(50, 50, 55, 0.85);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+    }
+    
+    .layer-toggle:active {
+      transform: translateY(1px);
+    }
+
     @media (max-width: 480px) {
       .overlay-panel {
         left: 15px;
@@ -301,6 +335,11 @@
 
   <!-- Map element -->
   <div id="map"></div>
+
+  <!-- Map layer toggle button -->
+  <button class="layer-toggle" id="layerToggle" onclick="toggleMapLayer()">
+    🛰️ Satellite View
+  </button>
 
   <!-- Dashboard Panel -->
   <div class="overlay-panel">
@@ -369,12 +408,37 @@
       zoomAnimation: true
     }).setView([10.0104, 76.3608], 13); // Default view coordinate
 
-    // Add CartoDB Dark Matter tiles (premium dark mode theme)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Map Layers Definition
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 20
-    }).addTo(map);
+    });
+
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19
+    });
+
+    // Add Dark Layer as default
+    darkLayer.addTo(map);
+
+    // Map layer toggle handler
+    let isSatellite = false;
+    function toggleMapLayer() {
+      const toggleBtn = document.getElementById('layerToggle');
+      if (isSatellite) {
+        map.removeLayer(satelliteLayer);
+        darkLayer.addTo(map);
+        toggleBtn.innerHTML = '🛰️ Satellite View';
+        isSatellite = false;
+      } else {
+        map.removeLayer(darkLayer);
+        satelliteLayer.addTo(map);
+        toggleBtn.innerHTML = '🌑 Dark Map';
+        isSatellite = true;
+      }
+    }
 
     // Live variables
     let breadcrumbs = []; // Array of L.LatLng
@@ -444,6 +508,7 @@
         // Show the map and dashboard panel
         document.getElementById('map').style.display = 'block';
         document.querySelector('.overlay-panel').style.display = 'block';
+        document.getElementById('layerToggle').style.display = 'flex';
         map.invalidateSize();
       } else {
         statusBadge.textContent = 'Safe / Resolved';
@@ -467,6 +532,7 @@
         // Hide the map and dashboard overlay panel entirely
         document.getElementById('map').style.display = 'none';
         document.querySelector('.overlay-panel').style.display = 'none';
+        document.getElementById('layerToggle').style.display = 'none';
 
         // Display the safe banner or no-tracking placeholder
         if (wasActive) {

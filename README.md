@@ -17,6 +17,7 @@ It enables wearers to trigger instant alerts, send automated emergency SMS messa
 
 ### 🌐 Live Web Tracker (`map.html` via Firebase Hosting)
 *   **Real-Time Map Synchronization**: Connects to the database and tracks location dynamically using Leaflet.js and CartoDB Dark Matter dark-themed tiles.
+*   **Satellite Imagery Toggle**: Features a floating glassmorphic button to switch instantly between the dark cartographic map and high-resolution satellite imagery (Esri World Imagery) for clear physical terrain visuals.
 *   **Breadcrumb Path Trail**: Plots chronological dot markers indicating the wearer's path (newer markers are more opaque) connected by a dashed red polyline route.
 *   **Pulsing State Markers**: Shows a pulsing red marker during an active emergency, which turns into a pulsing green marker when the alert is stopped.
 *   **Complete Privacy Mode**: Once the alert is deactivated, the map tiles, location markers, and overlay stats panel are immediately wiped from memory and hidden from the screen, displaying a full-screen **"Wearer is Safe"** banner.
@@ -31,7 +32,7 @@ It enables wearers to trigger instant alerts, send automated emergency SMS messa
 *   **Emergency SMS Gateway**: `another_telephony`
 *   **Backend Serverless Services**: Firebase Auth & Firebase Realtime Database
 *   **Web Hosting**: Firebase Hosting
-*   **Web Maps Integration**: Leaflet.js (CartoDB Dark Matter tiles)
+*   **Web Maps Integration**: Leaflet.js (CartoDB Dark Matter tiles & Esri World Imagery)
 
 ---
 
