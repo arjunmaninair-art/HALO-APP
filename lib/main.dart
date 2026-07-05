@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
@@ -7,8 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:another_telephony/telephony.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'contacts_screen.dart';
+import 'login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,7 +36,22 @@ class HaloApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: const BluetoothAndSOSPage(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: Colors.blueAccent),
+              ),
+            );
+          }
+          if (snapshot.hasData && snapshot.data != null) {
+            return const BluetoothAndSOSPage();
+          }
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }
@@ -125,8 +143,35 @@ class _BluetoothAndSOSPageState extends State<BluetoothAndSOSPage> {
 
       if (permissionsGranted == true) {
         final prefs = await SharedPreferences.getInstance();
-        List<String> phoneList =
-            prefs.getStringList('sos_contacts') ?? ["8714992152"];
+        List<String> rawContacts = prefs.getStringList('sos_contacts_v2') ?? [];
+        List<String> phoneList = [];
+
+        if (rawContacts.isNotEmpty) {
+          for (String contactJson in rawContacts) {
+            try {
+              final contact = jsonDecode(contactJson);
+              String? phone = contact['phone'];
+              if (phone != null && phone.isNotEmpty) {
+                phoneList.add(phone);
+              }
+            } catch (e) {
+              debugPrint("Error parsing contact: $e");
+            }
+          }
+        }
+
+        // Fallback to legacy contacts (v1) if v2 is empty
+        if (phoneList.isEmpty) {
+          List<String> legacyContacts = prefs.getStringList('sos_contacts') ?? [];
+          if (legacyContacts.isNotEmpty) {
+            phoneList.addAll(legacyContacts);
+          }
+        }
+
+        // Default fallback if still empty
+        if (phoneList.isEmpty) {
+          phoneList.add("8714992152");
+        }
 
         // 1. Get High Accuracy Location with Timeout Fallback
         Position? pos;
@@ -289,12 +334,26 @@ class _BluetoothAndSOSPageState extends State<BluetoothAndSOSPage> {
               child: Column(
                 children: [
                   const SizedBox(height: 20),
-                  const Text("HALO",
-                      style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 8,
-                          color: Colors.white)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 48), // Spacer to balance the logout icon for centering
+                      const Text("HALO",
+                          style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 8,
+                              color: Colors.white)),
+                      IconButton(
+                        icon: const Icon(Icons.logout_rounded, color: Colors.white54),
+                        tooltip: "Logout",
+                        onPressed: () async {
+                          _trackingTimer?.cancel();
+                          await FirebaseAuth.instance.signOut();
+                        },
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 30),
                   Container(
                     padding: const EdgeInsets.all(16),
