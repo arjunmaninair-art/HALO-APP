@@ -22,6 +22,19 @@ void main() async {
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
+
+  // One-time clean slate wipe of all local contacts data to remove existing leaks
+  final prefs = await SharedPreferences.getInstance();
+  if (prefs.getBool('has_cleared_slate_v1') != true) {
+    final keys = prefs.getKeys();
+    for (String key in keys) {
+      if (key.startsWith('sos_contacts')) {
+        await prefs.remove(key);
+      }
+    }
+    await prefs.setBool('has_cleared_slate_v1', true);
+  }
+
   runApp(const HaloApp());
 }
 
@@ -143,7 +156,15 @@ class _BluetoothAndSOSPageState extends State<BluetoothAndSOSPage> {
 
       if (permissionsGranted == true) {
         final prefs = await SharedPreferences.getInstance();
-        List<String> rawContacts = prefs.getStringList('sos_contacts_v2') ?? [];
+        final user = FirebaseAuth.instance.currentUser;
+        final String storageKey = user != null ? 'sos_contacts_v2_${user.uid}' : 'sos_contacts_v2';
+        List<String> rawContacts = prefs.getStringList(storageKey) ?? [];
+
+        // Migrate from global key if user-specific list is empty
+        if (rawContacts.isEmpty && user != null) {
+          rawContacts = prefs.getStringList('sos_contacts_v2') ?? [];
+        }
+
         List<String> phoneList = [];
 
         if (rawContacts.isNotEmpty) {
@@ -268,6 +289,7 @@ class _BluetoothAndSOSPageState extends State<BluetoothAndSOSPage> {
         if (pos != null) {
           updates["lat"] = pos.latitude;
           updates["lng"] = pos.longitude;
+          updates["heading"] = pos.heading;
           updates["timestamp"] = DateTime.now().millisecondsSinceEpoch;
         }
         await ref.update(updates);
@@ -278,6 +300,7 @@ class _BluetoothAndSOSPageState extends State<BluetoothAndSOSPage> {
           await historyRef.set({
             "lat": pos.latitude,
             "lng": pos.longitude,
+            "heading": pos.heading,
             "timestamp": DateTime.now().millisecondsSinceEpoch,
           });
         }

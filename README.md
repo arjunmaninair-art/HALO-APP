@@ -13,13 +13,15 @@ It enables wearers to trigger instant alerts, send automated emergency SMS messa
 *   **BLE Hardware Link**: Automatic BLE scanning and connection to the `ESP32_SOS_Button` module with crash-safe Bluetooth error handling.
 *   **Robust Location Fetching**: Obtains high-accuracy GPS coordinates, falling back to the device's last known location after an 8-second timeout.
 *   **Fail-Safe Emergency Loop**: Firebase database updates and SMS transmissions are isolated in separate try-catch blocks. If Firebase is offline or blocked, **critical emergency SMS alerts are guaranteed to send successfully** to contacts.
-*   **Structured Contacts Manager**: Save names alongside phone numbers locally (persisted in `SharedPreferences` with legacy migration). Includes an **Inline Edit Dialog** to modify or assign names to existing phone numbers, and synchronizes numbers to the ESP32.
+*   **Structured & User-Scoped Contacts**: Save names alongside phone numbers locally, isolated and scoped specifically to each logged-in account's Firebase User ID (UID). If a new user logs in, they start with an empty slate. Includes one-time legacy migration, an **Inline Edit Dialog**, and ESP32 BLE synchronizations.
 
 ### 🌐 Live Web Tracker (`map.html` via Firebase Hosting)
 *   **Real-Time Map Synchronization**: Connects to the database and tracks location dynamically using Leaflet.js and CartoDB Dark Matter dark-themed tiles.
 *   **Satellite Imagery Toggle**: Features a floating glassmorphic button to switch instantly between the dark cartographic map and high-resolution satellite imagery (Esri World Imagery) for clear physical terrain visuals.
+*   **Rotated Compass Heading**: Renders a glowing red directional flashlight beam centered on the wearer's location. The beam automatically rotates dynamically in real-time to align with the device's movement bearing (heading).
 *   **Breadcrumb Path Trail**: Plots chronological dot markers indicating the wearer's path (newer markers are more opaque) connected by a dashed red polyline route.
 *   **Pulsing State Markers**: Shows a pulsing red marker during an active emergency, which turns into a pulsing green marker when the alert is stopped.
+*   **Compact Stats Dashboard**: Designed with a high-density, space-saving panel (max-width: 320px) showing breadcrumbs count, last ping latency, and map recentering controls.
 *   **Complete Privacy Mode**: Once the alert is deactivated, the map tiles, location markers, and overlay stats panel are immediately wiped from memory and hidden from the screen, displaying a full-screen **"Wearer is Safe"** banner.
 *   **Zero-Caching**: Configured with Cache-Control headers on Firebase Hosting to bypass browser caching, ensuring updates go live instantly.
 

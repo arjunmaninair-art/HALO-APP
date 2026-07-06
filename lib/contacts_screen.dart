@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ContactsScreen extends StatefulWidget {
   final BluetoothCharacteristic? char;
@@ -22,19 +23,58 @@ class _ContactsScreenState extends State<ContactsScreen> {
     _load();
   }
 
+  // Get user-specific key
+  String _getStorageKey() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user != null ? 'sos_contacts_v2_${user.uid}' : 'sos_contacts_v2';
+  }
+
   // Load contacts with legacy data migration fallback
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    List<String> rawList = prefs.getStringList('sos_contacts_v2') ?? [];
+    final key = _getStorageKey();
+    List<String> rawList = prefs.getStringList(key) ?? [];
 
     if (rawList.isEmpty) {
-      // Check for legacy v1 contacts (which were plain strings)
-      List<String> legacyList = prefs.getStringList('sos_contacts') ?? [];
-      setState(() {
-        _contacts = legacyList
-            .map((num) => {"name": "No Name", "phone": num})
-            .toList();
-      });
+      // Check if we can migrate global/legacy contacts
+      List<String> globalV2 = prefs.getStringList('sos_contacts_v2') ?? [];
+      if (globalV2.isNotEmpty) {
+        setState(() {
+          _contacts = globalV2.map((str) {
+            try {
+              final map = jsonDecode(str);
+              return {
+                "name": map['name']?.toString() ?? "No Name",
+                "phone": map['phone']?.toString() ?? "",
+              };
+            } catch (e) {
+              return {"name": "No Name", "phone": str};
+            }
+          }).toList();
+        });
+        await _save();
+        // Immediately clear global keys to prevent double migration
+        await prefs.remove('sos_contacts_v2');
+        await prefs.remove('sos_contacts');
+      } else {
+        // Check for legacy v1 contacts (which were plain strings)
+        List<String> legacyList = prefs.getStringList('sos_contacts') ?? [];
+        if (legacyList.isNotEmpty) {
+          setState(() {
+            _contacts = legacyList
+                .map((num) => {"name": "No Name", "phone": num})
+                .toList();
+          });
+          await _save();
+          // Immediately clear global keys to prevent double migration
+          await prefs.remove('sos_contacts_v2');
+          await prefs.remove('sos_contacts');
+        } else {
+          setState(() {
+            _contacts = [];
+          });
+        }
+      }
     } else {
       setState(() {
         _contacts = rawList.map((str) {
@@ -55,8 +95,9 @@ class _ContactsScreenState extends State<ContactsScreen> {
   // Save list to device memory in v2 format
   Future<void> _save() async {
     final prefs = await SharedPreferences.getInstance();
+    final key = _getStorageKey();
     List<String> rawList = _contacts.map((c) => jsonEncode(c)).toList();
-    await prefs.setStringList('sos_contacts_v2', rawList);
+    await prefs.setStringList(key, rawList);
   }
 
   // Add Contact & Sync Phone to ESP32
